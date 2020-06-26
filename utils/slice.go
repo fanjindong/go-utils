@@ -13,20 +13,18 @@ func SliceInsert(s interface{}, index int, item interface{}) error {
 	}
 
 	v := reflect.ValueOf(s).Elem()
-	if index >= v.Len() || index < 0 {
+	if index > v.Len() || index < 0 {
 		return SliceIndexRangeOut
 	}
 	if !v.CanSet() {
 		return SliceMustPointer
 	}
 
-	newSlice := reflect.MakeSlice(t, 0, v.Cap()+1)
-	for i := 0; i < v.Len(); i++ {
-		if i == index {
-			newSlice = reflect.Append(newSlice, reflect.ValueOf(item))
-		}
-		newSlice = reflect.Append(newSlice, v.Index(i))
-	}
+	itemValue := reflect.ValueOf(item)
+	newSlice := reflect.Append(v, itemValue)
+
+	reflect.Copy(newSlice.Slice(index+1, newSlice.Len()), newSlice.Slice(index, newSlice.Len()))
+	newSlice.Index(index).Set(itemValue)
 	v.Set(newSlice)
 	return nil
 }
